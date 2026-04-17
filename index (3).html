@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4154S · U.S.S. Robotics — Autonomous Playbook</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06090f;--bg2:#0a0f1c;--bg3:#0f1628;--bg4:#14203a;
+  --gold:#b87828;--gold2:#d49030;--gold3:#f0b848;
+  --red:#b03838;--red2:#cc5050;--red-bg:rgba(176,56,56,.12);
+  --blue:#3060b0;--blue2:#4878cc;--blue-bg:rgba(48,96,176,.12);
+  --text:#aabdd0;--dim:#4a5d70;
+  --bdr:rgba(255,255,255,.055);--bdr2:rgba(255,255,255,.12);--r:5px
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif}
+body{display:flex;flex-direction:column}
+#app{display:flex;flex:1;overflow:hidden}
+
+/* HEADER */
+header{height:50px;display:flex;align-items:center;padding:0 16px;gap:12px;background:var(--bg2);border-bottom:1px solid var(--bdr);flex-shrink:0}
+.logo-wrap{display:flex;align-items:center;gap:9px}
+.logo-wrap svg{width:22px;height:26px;flex-shrink:0}
+.logo-tx strong{display:block;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--gold3);letter-spacing:.08em}
+.logo-tx small{display:block;font-size:9px;color:var(--dim);letter-spacing:.18em;text-transform:uppercase;margin-top:1px}
+.hnav{margin-left:auto;display:flex;gap:5px}
+.hb{background:transparent;border:1px solid var(--bdr2);color:var(--dim);padding:4px 13px;border-radius:var(--r);font:600 10px 'Barlow',sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.hb:hover,.hb.on{border-color:var(--gold2);color:var(--gold2)}
+.hb.on{background:rgba(184,120,40,.1)}
+
+/* VIEWER PAGE */
+#viewer{display:flex;flex:1;overflow:hidden}
+/* sidebar */
+.vs{width:210px;background:var(--bg2);border-right:1px solid var(--bdr);display:flex;flex-direction:column;flex-shrink:0}
+.vs-hd{padding:10px 13px;font-size:8.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--bdr)}
+.vsl{flex:1;overflow-y:auto;padding:5px}
+.vri{display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:var(--r);cursor:pointer;transition:background .1s;margin-bottom:1px}
+.vri:hover{background:var(--bg3)}
+.vri.on{background:var(--bg4);padding-left:7px;border-left:2px solid var(--gold2)}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot.red{background:var(--red2)}.dot.blue{background:var(--blue2)}
+.rnm{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.rsub{font-size:9.5px;color:var(--dim);margin-top:1px}
+/* viewer main */
+.vm{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.vfa{flex:1;display:flex;align-items:center;justify-content:center;padding:14px 14px 8px;overflow:hidden;min-height:0}
+.vfw{height:100%;aspect-ratio:1;max-width:100%}
+#vfield{width:100%;height:100%}
+/* info strip */
+.vi{height:108px;flex-shrink:0;background:var(--bg2);border-top:1px solid var(--bdr);display:flex;align-items:center;padding:0 20px;gap:20px;overflow:hidden}
+.vi-empty{flex:1;font-size:12px;color:var(--dim);text-align:center}
+.vi-L{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;justify-content:center}
+.vi-pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:8.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;width:fit-content}
+.vi-pill.red{background:var(--red-bg);color:var(--red2);border:1px solid var(--red)}
+.vi-pill.blue{background:var(--blue-bg);color:var(--blue2);border:1px solid var(--blue)}
+.vi-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:#d0e4f8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1}
+.vi-desc{font-size:11.5px;color:var(--text);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vi-R{flex-shrink:0;width:198px;display:flex;flex-direction:column;gap:6px;justify-content:center}
+.vi-lbl{font-size:8px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.vi-frame{width:100%;aspect-ratio:16/9;border-radius:4px;border:none}
+.vi-vbtn{display:flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--bdr2);padding:8px 11px;border-radius:var(--r);color:var(--text);font-size:11.5px;text-decoration:none;transition:border-color .15s}
+.vi-vbtn:hover{border-color:var(--gold2)}
+
+/* EDITOR PAGE */
+#editor{display:none;flex:1;overflow:hidden}
+.es{width:215px;background:var(--bg2);border-right:1px solid var(--bdr);display:flex;flex-direction:column;flex-shrink:0}
+.es-hd{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--bdr)}
+.es-hd span{font-size:8.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+.es-add{width:22px;height:22px;background:transparent;border:1px solid var(--bdr2);color:var(--gold2);font-size:16px;border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.es-add:hover{background:rgba(184,120,40,.12)}
+.esl{flex:1;overflow-y:auto;padding:5px}
+.eri{display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:var(--r);cursor:pointer;transition:background .1s;margin-bottom:1px}
+.eri:hover{background:var(--bg3)}
+.eri.on{background:var(--bg4);padding-left:7px;border-left:2px solid var(--gold2)}
+.eri-tx{flex:1;min-width:0;font-size:11.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.erd{width:19px;height:19px;background:transparent;border:none;color:var(--dim);font-size:11px;cursor:pointer;border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .1s}
+.erd:hover{background:var(--red-bg);color:var(--red2)}
+.ec{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.etb{height:40px;background:var(--bg3);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 10px;gap:6px;flex-shrink:0}
+.tb{background:transparent;border:1px solid var(--bdr2);color:var(--dim);padding:4px 9px;border-radius:3px;font:600 9.5px 'Barlow',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.tb:hover{border-color:var(--gold2);color:var(--gold2)}
+.tb.on{background:rgba(184,120,40,.12);border-color:var(--gold2);color:var(--gold2)}
+.tbsep{width:1px;height:16px;background:var(--bdr2)}
+.tbxy{font-size:9.5px;font-family:'Space Mono',monospace;color:var(--dim);margin-left:auto}
+.efa{flex:1;display:flex;align-items:center;justify-content:center;padding:14px;overflow:hidden}
+.efw{height:100%;aspect-ratio:1;max-width:100%;position:relative}
+#efield{width:100%;height:100%}
+.eov{position:absolute;inset:0;pointer-events:none;z-index:5}
+.eov.on{pointer-events:all;cursor:crosshair}
+.ef{width:260px;background:var(--bg2);border-left:1px solid var(--bdr);padding:14px 13px;overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column;gap:11px}
+.ef-lbl{font-size:8.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:3px}
+.fi,textarea{width:100%;background:var(--bg3);border:1px solid var(--bdr2);color:var(--text);padding:6px 8px;border-radius:var(--r);font:400 12px 'Barlow',sans-serif;outline:none;transition:border-color .15s;resize:none}
+.fi:focus,textarea:focus{border-color:var(--gold2)}
+textarea{height:68px;line-height:1.55}
+.arow{display:flex;gap:5px}
+.aopt{flex:1;padding:5px 0;text-align:center;border-radius:3px;border:1px solid var(--bdr2);cursor:pointer;font:700 10px 'Barlow',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);transition:all .15s}
+.aopt.red.on{background:var(--red-bg);border-color:var(--red);color:var(--red2)}
+.aopt.blue.on{background:var(--blue-bg);border-color:var(--blue);color:var(--blue2)}
+.wptag{font-size:10px;font-family:'Space Mono',monospace;color:var(--dim);background:var(--bg3);padding:5px 8px;border-radius:3px;text-align:center}
+.fnote{font-size:10px;color:var(--dim);line-height:1.55}
+.fsave{width:100%;padding:8px;background:var(--gold);border:none;color:#06090f;border-radius:var(--r);font:700 11px 'Barlow',sans-serif;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;transition:background .15s;margin-top:2px}
+.fsave:hover{background:var(--gold3)}
+.fcanc{width:100%;padding:8px;background:transparent;border:1px solid var(--bdr2);color:var(--dim);border-radius:var(--r);font:600 10px 'Barlow',sans-serif;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.fcanc:hover{border-color:var(--text);color:var(--text)}
+.ef-idle{display:flex;align-items:center;justify-content:center;height:100%;font-size:11.5px;color:var(--dim);padding:16px;text-align:center;line-height:1.7}
+
+/* MODALS */
+.modal{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.78);align-items:center;justify-content:center}
+.modal.on{display:flex}
+.mbox{background:var(--bg2);border:1px solid var(--bdr2);border-radius:10px;padding:28px 24px;width:284px;text-align:center}
+.mbox svg{display:block;margin:0 auto 16px}
+.mt{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--gold3);margin-bottom:4px;letter-spacing:.04em}
+.ms{font-size:11px;color:var(--dim);margin-bottom:18px;line-height:1.6}
+.min{width:100%;background:var(--bg3);border:1px solid var(--bdr2);color:var(--text);padding:8px 12px;border-radius:var(--r);font:400 14px 'Barlow',sans-serif;text-align:center;letter-spacing:.1em;margin-bottom:9px;outline:none;transition:border-color .15s}
+.min:focus{border-color:var(--gold2)}
+.mbtn{width:100%;padding:9px;background:var(--gold);border:none;color:#06090f;border-radius:var(--r);font:700 11.5px 'Barlow',sans-serif;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;transition:background .15s}
+.mbtn:hover{background:var(--gold3)}
+.merr{font-size:10px;color:var(--red2);margin-top:7px;display:none}
+.cfm .mbox{width:266px}
+.cfm p{font-size:12px;color:var(--text);margin-bottom:14px;line-height:1.6}
+.cbtns{display:flex;gap:7px}
+.cdel{flex:1;padding:8px;background:var(--red);border:none;color:#fff;border-radius:var(--r);font:700 10.5px 'Barlow',sans-serif;cursor:pointer;letter-spacing:.06em;text-transform:uppercase}
+.cno{flex:1;padding:8px;background:transparent;border:1px solid var(--bdr2);color:var(--dim);border-radius:var(--r);font:600 10.5px 'Barlow',sans-serif;cursor:pointer}
+
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-wrap">
+    <svg viewBox="0 0 22 26" fill="none">
+      <path d="M11 1.2L2 4.5v7.8c0 7.5 4.5 10.8 9 13 4.5-2.2 9-5.5 9-13V4.5L11 1.2z"
+        fill="#0a0f1c" stroke="#b87828" stroke-width="1.4"/>
+      <text x="11" y="16" text-anchor="middle" font-size="6" fill="#f0b848"
+        font-weight="700" font-family="Space Mono,monospace">USS</text>
+    </svg>
+    <div class="logo-tx">
+      <strong>4154S · U.S.S. ROBOTICS</strong>
+      <small>Autonomous Playbook</small>
+    </div>
+  </div>
+  <div class="hnav">
+    <button class="hb on" id="hbv" onclick="goPage('v')">Viewer</button>
+    <button class="hb"    id="hbe" onclick="goEditor()">Editor ⚙</button>
+  </div>
+</header>
+
+<div id="app">
+
+  <!-- ── VIEWER ────────────────────────────────────────────── -->
+  <div id="viewer">
+    <div class="vs">
+      <div class="vs-hd">Routines</div>
+      <div class="vsl" id="vsl"></div>
+    </div>
+    <div class="vm">
+      <div class="vfa">
+        <div class="vfw"><div id="vfield"></div></div>
+      </div>
+      <div class="vi" id="vi">
+        <div class="vi-empty">← Select a routine to view its path</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── EDITOR ────────────────────────────────────────────── -->
+  <div id="editor" style="display:flex;flex:1;overflow:hidden">
+    <div class="es">
+      <div class="es-hd">
+        <span>Routines</span>
+        <button class="es-add" onclick="newR()" title="New">+</button>
+      </div>
+      <div class="esl" id="esl"></div>
+    </div>
+    <div class="ec">
+      <div class="etb">
+        <button class="tb" id="drbtn" onclick="togDrw()">Draw Path</button>
+        <div class="tbsep"></div>
+        <button class="tb" onclick="undoWP()">Undo</button>
+        <button class="tb" onclick="clrWPs()">Clear</button>
+        <span class="tbxy" id="tbxy">hover field for coords</span>
+      </div>
+      <div class="efa">
+        <div class="efw" id="efw">
+          <div id="efield"></div>
+          <div class="eov" id="eov"
+            onmousemove="trk(event)" onclick="addWP(event)"></div>
+        </div>
+      </div>
+    </div>
+    <div class="ef" id="ef">
+      <div class="ef-idle">Click <strong>+</strong> to create a routine, or select one to edit.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal" id="auth">
+  <div class="mbox">
+    <svg width="36" height="42" viewBox="0 0 36 42" fill="none">
+      <path d="M18 2L3 7v12c0 12 7.5 18 15 20.5C23.5 37 31 31 31 19V7L18 2z"
+        fill="#0f1628" stroke="#b87828" stroke-width="1.6"/>
+      <text x="18" y="24" text-anchor="middle" font-size="8.5" fill="#f0b848"
+        font-weight="700" font-family="Space Mono,monospace">USS</text>
+    </svg>
+    <div class="mt">Editor Access</div>
+    <div class="ms">4154S team members only.<br>Enter the team password to unlock.</div>
+    <input class="min" type="password" id="ain" placeholder="Password"
+      onkeydown="if(event.key==='Enter')chkPW()">
+    <button class="mbtn" onclick="chkPW()">Unlock Editor</button>
+    <div class="merr" id="aerr">Incorrect password — try again</div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="modal cfm" id="cfm">
+  <div class="mbox">
+    <p id="cfmp">Delete this routine?</p>
+    <div class="cbtns">
+      <button class="cdel" onclick="doDel()">Delete</button>
+      <button class="cno"  onclick="clsCfm()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ╔════════════════════════════════════════════════════════╗
+// ║  CONFIG — change these before deploying to Netlify    ║
+// ╚════════════════════════════════════════════════════════╝
+const PW  = 'uss4154S';   // ← CHANGE THIS PASSWORD
+const KEY = 'uss4154s-v2';
+
+// STATE
+let data=[], selId=null, editId=null, draftWPs=[], drw=false,
+    authed=false, pendDel=null, dAlli='red';
+
+// UTILS
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const ytId = u => { const m=(u||'').match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/); return m?m[1]:null; };
+
+// DATA
+function loadD(){
+  try{ const d=localStorage.getItem(KEY); return d?JSON.parse(d):defaults(); }
+  catch{ return defaults(); }
+}
+function saveD(){ localStorage.setItem(KEY,JSON.stringify(data)); }
+
+function defaults(){
+  return [
+    { id:uid(), name:'Red AWP — Near Park Zone', alliance:'red',
+      description:'Start at red Park Zone (bottom-right). Score preload into Red Long Goal control zone, push 2 more blocks, return to Park Zone for AWP.',
+      videoUrl:'', waypoints:[{x:.88,y:.88},{x:.70,y:.84},{x:.50,y:.82},{x:.38,y:.82},{x:.50,y:.64},{x:.88,y:.88}] },
+    { id:uid(), name:'Blue Safe — Long Goal Rush', alliance:'blue',
+      description:'From blue Park Zone, drive straight to Blue Long Goal, score blocks into the control zone, then hold position. Safe and consistent for quals.',
+      videoUrl:'', waypoints:[{x:.12,y:.12},{x:.30,y:.18},{x:.50,y:.20},{x:.62,y:.20},{x:.50,y:.38},{x:.12,y:.12}] },
+    { id:uid(), name:'Red Elim — Center Goal Control', alliance:'red',
+      description:'Aggressive elimination auto. Rush from red Park Zone through field center, control Upper Center Goal, then score into Red Long Goal.',
+      videoUrl:'', waypoints:[{x:.88,y:.88},{x:.65,y:.70},{x:.50,y:.56},{x:.50,y:.46},{x:.38,y:.46},{x:.50,y:.82},{x:.88,y:.88}] }
+  ];
+}
+
+// ════════════════════════════════════════════════════════════
+//  VRC PUSH BACK 2025-26 FIELD SVG
+//
+//  Field orientation: Blue alliance = TOP, Red alliance = BOTTOM
+//
+//  Elements drawn (all positions in px, field = 480×480):
+//    Tiles      — 6×6 grey-green foam tiles (80×80px each)
+//    Blue Long Goal  — y=82–118, x=72–408 (control zone center)
+//    Red Long Goal   — y=362–398, x=72–408 (control zone center)
+//    Center Goals    — Upper (solid) + Lower (dashed) stacked at center
+//    Blue Park Zone  — top-left  (4,4)–(64,57)  [18"×16"]
+//    Red Park Zone   — bot-right (416,423)–(476,476) [18"×16"]
+//    Loaders         — 2 per alliance at top/bottom walls
+//    Starting blocks — simplified blue/red squares in each half
+//
+//  To use a real field photo instead of this SVG:
+//    Replace the entire "FIELD BACKGROUND" section with:
+//      s += `<image href="YOUR_FIELD_PHOTO.jpg" x="0" y="0" width="480" height="480"/>`;
+//    Keep the PATH OVERLAY section unchanged.
+// ════════════════════════════════════════════════════════════
+function mkField(wps, alli){
+  const S=480, T=80;
+  const pc = alli==='red' ? '#e05050' : '#4888e8';
+
+  let s = `<svg viewBox="0 0 ${S} ${S}" xmlns="http://www.w3.org/2000/svg"
+    style="display:block;width:100%;height:100%">
+    <defs>
+      <marker id="ah" markerWidth="7" markerHeight="5.5" refX="6.2" refY="2.75" orient="auto">
+        <polygon points="0 0,7 2.75,0 5.5" fill="${pc}" opacity=".88"/>
+      </marker>
+    </defs>`;
+
+  // ── FIELD BACKGROUND ────────────────────────────────────
+  // Tiles: alternating grey-green (VRC foam tile colors)
+  for(let r=0;r<6;r++) for(let c=0;c<6;c++)
+    s += `<rect x="${c*T}" y="${r*T}" width="${T}" height="${T}"
+      fill="${(r+c)%2?'#4e6848':'#5a7852'}"/>`;
+
+  // Subtle alliance zone tints
+  s += `<rect x="0" y="0" width="480" height="180" fill="rgba(48,96,176,.07)"/>`;
+  s += `<rect x="0" y="300" width="480" height="180" fill="rgba(176,56,56,.07)"/>`;
+
+  // ── BLUE LONG GOAL ───────────────────────────────────────
+  // Full goal trough (clear plastic from above = semi-transparent)
+  s += `<rect x="72" y="82" width="336" height="36" rx="3"
+    fill="rgba(140,190,255,.1)" stroke="rgba(120,170,255,.65)" stroke-width="1.5"/>`;
+  // Control zone (center, holds up to 3 blocks) — white tape lines on field
+  s += `<rect x="183" y="82" width="114" height="36" rx="1"
+    fill="rgba(48,88,200,.22)" stroke="rgba(90,140,220,.55)" stroke-width="1" stroke-dasharray="5,2"/>`;
+  // Zone separator lines (making 3 sub-zones)
+  s += `<line x1="148" y1="82" x2="148" y2="118" stroke="rgba(120,170,255,.35)" stroke-width="1"/>`;
+  s += `<line x1="332" y1="82" x2="332" y2="118" stroke="rgba(120,170,255,.35)" stroke-width="1"/>`;
+  s += `<text x="240" y="104" text-anchor="middle" font-size="9"
+    fill="rgba(130,170,255,.7)" font-family="Space Mono,monospace">LONG GOAL — BLUE</text>`;
+
+  // ── RED LONG GOAL ────────────────────────────────────────
+  s += `<rect x="72" y="362" width="336" height="36" rx="3"
+    fill="rgba(255,150,150,.1)" stroke="rgba(255,130,130,.65)" stroke-width="1.5"/>`;
+  s += `<rect x="183" y="362" width="114" height="36" rx="1"
+    fill="rgba(200,56,56,.22)" stroke="rgba(220,90,90,.55)" stroke-width="1" stroke-dasharray="5,2"/>`;
+  s += `<line x1="148" y1="362" x2="148" y2="398" stroke="rgba(255,130,130,.35)" stroke-width="1"/>`;
+  s += `<line x1="332" y1="362" x2="332" y2="398" stroke="rgba(255,130,130,.35)" stroke-width="1"/>`;
+  s += `<text x="240" y="384" text-anchor="middle" font-size="9"
+    fill="rgba(255,130,130,.7)" font-family="Space Mono,monospace">LONG GOAL — RED</text>`;
+
+  // ── CENTER GOALS (Upper + Lower, vertically stacked) ────
+  // Upper Center Goal (higher value: 8 pts)
+  s += `<rect x="198" y="198" width="84" height="38" rx="3"
+    fill="rgba(220,200,55,.18)" stroke="rgba(215,196,55,.78)" stroke-width="1.5"/>`;
+  s += `<text x="240" y="221" text-anchor="middle" font-size="8.5"
+    fill="rgba(215,196,55,.8)" font-family="Space Mono,monospace">CTR GOAL — UP</text>`;
+  // Lower Center Goal (6 pts, shown dashed = lower/beneath)
+  s += `<rect x="198" y="244" width="84" height="38" rx="3"
+    fill="rgba(220,200,55,.1)" stroke="rgba(215,196,55,.45)" stroke-width="1.5" stroke-dasharray="5,3"/>`;
+  s += `<text x="240" y="267" text-anchor="middle" font-size="8.5"
+    fill="rgba(215,196,55,.48)" font-family="Space Mono,monospace">CTR GOAL — LO</text>`;
+
+  // ── PARK ZONES (18"×16" each = 60×53px) ─────────────────
+  // Blue Park Zone — top-left corner
+  s += `<rect x="3" y="3" width="60" height="53" rx="2"
+    fill="rgba(48,96,176,.28)" stroke="rgba(80,140,220,.82)" stroke-width="1.5"/>`;
+  s += `<text x="33" y="26" text-anchor="middle" font-size="7"
+    fill="rgba(100,165,255,.88)" font-family="Space Mono,monospace" font-weight="bold">PARK</text>`;
+  s += `<text x="33" y="38" text-anchor="middle" font-size="7"
+    fill="rgba(100,165,255,.88)" font-family="Space Mono,monospace" font-weight="bold">BLUE</text>`;
+  // Red Park Zone — bottom-right corner
+  s += `<rect x="417" y="424" width="60" height="53" rx="2"
+    fill="rgba(176,56,56,.28)" stroke="rgba(220,80,80,.82)" stroke-width="1.5"/>`;
+  s += `<text x="447" y="448" text-anchor="middle" font-size="7"
+    fill="rgba(255,110,110,.88)" font-family="Space Mono,monospace" font-weight="bold">PARK</text>`;
+  s += `<text x="447" y="460" text-anchor="middle" font-size="7"
+    fill="rgba(255,110,110,.88)" font-family="Space Mono,monospace" font-weight="bold">RED</text>`;
+
+  // ── LOADERS (adjacent to alliance stations, top + bottom) ─
+  [[108,2,60,18,'rgba(220,180,40,.5)','rgba(220,180,40,.82)'],[312,2,60,18,'rgba(220,180,40,.5)','rgba(220,180,40,.82)'],
+   [108,460,60,18,'rgba(220,180,40,.5)','rgba(220,180,40,.82)'],[312,460,60,18,'rgba(220,180,40,.5)','rgba(220,180,40,.82)']
+  ].forEach(([x,y,w,h,f,s2])=>{
+    s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1" fill="${f}" stroke="${s2}" stroke-width="1"/>`;
+    s += `<text x="${x+w/2}" y="${y+12.5}" text-anchor="middle" font-size="6.5"
+      fill="rgba(220,180,40,.82)" font-family="Space Mono,monospace">LOAD</text>`;
+  });
+
+  // ── STARTING BLOCKS (simplified representation) ──────────
+  // Blue blocks — upper area
+  [[96,36],[184,36],[272,36],[360,36],[448,36],
+   [96,144],[184,144],[272,144],[360,144]].forEach(([x,y])=>{
+    s += `<rect x="${x-8}" y="${y-8}" width="16" height="16" rx="2"
+      fill="rgba(48,80,200,.45)" stroke="rgba(80,130,224,.65)" stroke-width="1"/>`;
+  });
+  // Red blocks — lower area
+  [[96,444],[184,444],[272,444],[360,444],[448,444],
+   [96,336],[184,336],[272,336],[360,336]].forEach(([x,y])=>{
+    s += `<rect x="${x-8}" y="${y-8}" width="16" height="16" rx="2"
+      fill="rgba(200,56,56,.45)" stroke="rgba(220,80,80,.65)" stroke-width="1"/>`;
+  });
+  // Mixed center blocks
+  [[32,240],[448,240],[240,128],[240,352]].forEach(([x,y])=>{
+    const isBlue = y < 240;
+    s += `<rect x="${x-8}" y="${y-8}" width="16" height="16" rx="2"
+      fill="rgba(${isBlue?'48,80,200':'200,56,56'},.35)"
+      stroke="rgba(${isBlue?'80,130,224':'220,80,80'},.5)" stroke-width="1"/>`;
+  });
+
+  // ── FIELD BOUNDARY & WATERMARK ───────────────────────────
+  s += `<rect x="1.5" y="1.5" width="477" height="477" fill="none"
+    stroke="rgba(255,255,255,.24)" stroke-width="2.5"/>`;
+  s += `<text x="240" y="472" text-anchor="middle" font-size="8.5"
+    fill="rgba(255,255,255,.11)" font-family="Space Mono,monospace">
+    VRC PUSH BACK 2025–26  ·  4154S U.S.S. ROBOTICS</text>`;
+
+  // ── PATH OVERLAY ─────────────────────────────────────────
+  if(wps && wps.length > 0){
+    const pts = wps.map(w => ({x: Math.round(w.x*S), y: Math.round(w.y*S)}));
+    // Lines with arrowheads
+    for(let i=0; i<pts.length-1; i++){
+      const dx=pts[i+1].x-pts[i].x, dy=pts[i+1].y-pts[i].y;
+      const d=Math.sqrt(dx*dx+dy*dy)||1, off=16;
+      s += `<line x1="${pts[i].x}" y1="${pts[i].y}"
+        x2="${pts[i+1].x - dx/d*off}" y2="${pts[i+1].y - dy/d*off}"
+        stroke="${pc}" stroke-width="2.5" opacity=".9" marker-end="url(#ah)"/>`;
+    }
+    // Waypoint circles
+    pts.forEach((p,i) => {
+      s += `<circle cx="${p.x}" cy="${p.y}" r="14"
+        fill="${pc}1c" stroke="${pc}" stroke-width="2.5"/>`;
+      s += `<text x="${p.x}" y="${p.y+4.5}" text-anchor="middle" font-size="11"
+        fill="${pc}" font-family="Space Mono,monospace" font-weight="bold">${i+1}</text>`;
+    });
+  }
+  s += `</svg>`;
+  return s;
+}
+
+// ── VIEWER ─────────────────────────────────────────────────
+function rndrVList(){
+  const el = document.getElementById('vsl');
+  if(!data.length){
+    el.innerHTML='<div style="padding:14px 12px;font-size:11px;color:var(--dim);text-align:center;line-height:1.7">No routines yet.<br>Add them in the Editor.</div>';
+    return;
+  }
+  el.innerHTML = data.map(r=>`
+    <div class="vri ${r.id===selId?'on':''}" onclick="selR('${r.id}')">
+      <div class="dot ${r.alliance}"></div>
+      <div>
+        <div class="rnm">${esc(r.name)}</div>
+        <div class="rsub">${r.alliance} · ${r.waypoints.length} waypoints</div>
+      </div>
+    </div>`).join('');
+}
+
+function selR(id){
+  selId = id;
+  const r = data.find(x=>x.id===id);
+  rndrVList();
+  document.getElementById('vfield').innerHTML = mkField(r.waypoints, r.alliance);
+  rndrInfo(r);
+}
+
+function rndrInfo(r){
+  const el = document.getElementById('vi');
+  if(!r){ el.innerHTML='<div class="vi-empty">← Select a routine to view its path</div>'; return; }
+  const vid = ytId(r.videoUrl);
+  const vBlock = r.videoUrl
+    ? (vid
+        ? `<div class="vi-R">
+             <div class="vi-lbl">Video</div>
+             <iframe class="vi-frame" src="https://www.youtube.com/embed/${vid}" allowfullscreen></iframe>
+           </div>`
+        : `<div class="vi-R">
+             <div class="vi-lbl">Video</div>
+             <a href="${esc(r.videoUrl)}" target="_blank" class="vi-vbtn">
+               <span>▶</span> Watch Recording</a>
+           </div>`)
+    : '';
+  el.innerHTML = `
+    <div class="vi-L">
+      <div class="vi-pill ${r.alliance}">${r.alliance} alliance</div>
+      <div class="vi-name">${esc(r.name)}</div>
+      ${r.description ? `<div class="vi-desc">${esc(r.description)}</div>` : ''}
+    </div>
+    ${vBlock}`;
+}
+
+// ── EDITOR ─────────────────────────────────────────────────
+function rndrEList(){
+  const el = document.getElementById('esl');
+  if(!data.length){
+    el.innerHTML='<div style="padding:14px 12px;font-size:11px;color:var(--dim);text-align:center;line-height:1.7">No routines yet.<br>Click + to create one.</div>';
+    return;
+  }
+  el.innerHTML = data.map(r=>`
+    <div class="eri ${r.id===editId?'on':''}" onclick="loadE('${r.id}')">
+      <div class="dot ${r.alliance}" style="flex-shrink:0"></div>
+      <div class="eri-tx">${esc(r.name)}</div>
+      <button class="erd" onclick="event.stopPropagation();askDel('${r.id}')" title="Delete">✕</button>
+    </div>`).join('');
+}
+
+function rndrEField(){
+  document.getElementById('efield').innerHTML = mkField(draftWPs, dAlli);
+}
+
+function newR(){
+  editId=null; draftWPs=[]; dAlli='red'; drw=false;
+  updDB(); rndrEField(); rndrEList(); showForm(null);
+}
+
+function loadE(id){
+  editId=id;
+  const r = data.find(x=>x.id===id);
+  draftWPs = [...(r.waypoints||[])];
+  dAlli = r.alliance; drw=false;
+  updDB(); rndrEField(); rndrEList(); showForm(r);
+}
+
+function showForm(r){
+  document.getElementById('ef').innerHTML = `
+    <div>
+      <div class="ef-lbl">Routine Name</div>
+      <input class="fi" id="fn" type="text"
+        placeholder="e.g. Red AWP — Near Park Zone"
+        value="${r?esc(r.name):''}">
+    </div>
+    <div>
+      <div class="ef-lbl">Alliance</div>
+      <div class="arow">
+        <div class="aopt red ${!r||r.alliance==='red'?'on':''}" onclick="setA('red',this)">Red</div>
+        <div class="aopt blue ${r&&r.alliance==='blue'?'on':''}" onclick="setA('blue',this)">Blue</div>
+      </div>
+    </div>
+    <div>
+      <div class="ef-lbl">Description</div>
+      <textarea class="fi" id="fd"
+        placeholder="Strategy notes, scoring objectives, match context...">${r?esc(r.description||''):''}</textarea>
+    </div>
+    <div>
+      <div class="ef-lbl">Video URL (optional)</div>
+      <input class="fi" type="url" id="fv"
+        placeholder="YouTube or recording link"
+        value="${r?esc(r.videoUrl||''):''}">
+    </div>
+    <div>
+      <div class="ef-lbl">Path Waypoints</div>
+      <div class="wptag" id="wpt">${draftWPs.length} waypoints plotted</div>
+      <div class="fnote" style="margin-top:5px">
+        Enable "Draw Path" in the toolbar, then click on the field to place numbered waypoints in order.
+      </div>
+    </div>
+    <button class="fsave" onclick="saveR()">Save Routine</button>
+    ${r?`<button class="fcanc" onclick="cancelE()">Cancel</button>`:''}`;
+}
+
+function setA(v,el){
+  dAlli=v;
+  document.querySelectorAll('.aopt').forEach(o=>o.classList.remove('on'));
+  el.classList.add('on'); rndrEField();
+}
+
+function togDrw(){
+  drw=!drw; updDB();
+  const ov=document.getElementById('eov');
+  drw ? ov.classList.add('on') : ov.classList.remove('on');
+}
+function updDB(){
+  const b=document.getElementById('drbtn');
+  if(b) drw ? b.classList.add('on') : b.classList.remove('on');
+}
+
+function trk(e){
+  const w=document.getElementById('efw'); if(!w)return;
+  const rc=w.getBoundingClientRect();
+  const x=Math.max(0,Math.min(1,(e.clientX-rc.left)/rc.width));
+  const y=Math.max(0,Math.min(1,(e.clientY-rc.top)/rc.height));
+  document.getElementById('tbxy').textContent =
+    `${Math.round(x*144)}" × ${Math.round((1-y)*144)}"`;
+}
+
+function addWP(e){
+  if(!drw)return;
+  const w=document.getElementById('efw');
+  const rc=w.getBoundingClientRect();
+  const x=parseFloat(Math.max(0,Math.min(1,(e.clientX-rc.left)/rc.width)).toFixed(4));
+  const y=parseFloat(Math.max(0,Math.min(1,(e.clientY-rc.top)/rc.height)).toFixed(4));
+  draftWPs.push({x,y}); rndrEField();
+  const t=document.getElementById('wpt'); if(t)t.textContent=`${draftWPs.length} waypoints plotted`;
+}
+function undoWP(){ draftWPs.pop(); rndrEField(); const t=document.getElementById('wpt'); if(t)t.textContent=`${draftWPs.length} waypoints plotted`; }
+function clrWPs(){ draftWPs=[]; rndrEField(); const t=document.getElementById('wpt'); if(t)t.textContent='0 waypoints plotted'; }
+
+function saveR(){
+  const nm=(document.getElementById('fn')?.value||'').trim();
+  const de=(document.getElementById('fd')?.value||'').trim();
+  const vi=(document.getElementById('fv')?.value||'').trim();
+  const ni=document.getElementById('fn');
+  if(!nm){ if(ni){ni.style.borderColor='var(--red2)';ni.focus();} return; }
+  if(editId){
+    const i=data.findIndex(r=>r.id===editId);
+    if(i>=0) data[i]={...data[i],name:nm,description:de,videoUrl:vi,alliance:dAlli,waypoints:draftWPs};
+  }else{
+    const nr={id:uid(),name:nm,description:de,videoUrl:vi,alliance:dAlli,waypoints:draftWPs};
+    data.push(nr); editId=nr.id;
+  }
+  saveD(); rndrEList(); rndrVList();
+  const b=document.querySelector('.fsave');
+  if(b){b.textContent='Saved ✓';b.style.background='#2c7a38';
+    setTimeout(()=>{b.textContent='Save Routine';b.style.background='';},1500);}
+}
+
+function cancelE(){
+  editId=null; draftWPs=[]; drw=false; updDB();
+  rndrEField(); rndrEList();
+  document.getElementById('ef').innerHTML=
+    '<div class="ef-idle">Click <strong>+</strong> to create a routine, or select one to edit.</div>';
+}
+
+function askDel(id){
+  pendDel=id;
+  const r=data.find(x=>x.id===id);
+  document.getElementById('cfmp').textContent=`Delete "${r?r.name:'this routine'}"? This cannot be undone.`;
+  document.getElementById('cfm').classList.add('on');
+}
+function doDel(){
+  if(!pendDel)return;
+  data=data.filter(r=>r.id!==pendDel);
+  if(editId===pendDel){
+    editId=null; draftWPs=[]; rndrEField();
+    document.getElementById('ef').innerHTML=
+      '<div class="ef-idle">Click <strong>+</strong> to create a routine, or select one to edit.</div>';
+  }
+  if(selId===pendDel){ selId=null; rndrInfo(null); document.getElementById('vfield').innerHTML=mkField([],null); }
+  saveD(); rndrEList(); rndrVList(); clsCfm();
+}
+function clsCfm(){ document.getElementById('cfm').classList.remove('on'); pendDel=null; }
+
+// ── NAVIGATION ─────────────────────────────────────────────
+function goPage(p){
+  document.getElementById('viewer').style.display = p==='v' ? 'flex' : 'none';
+  document.getElementById('editor').style.display = p==='e' ? 'flex' : 'none';
+  document.getElementById('hbv').classList.toggle('on', p==='v');
+  document.getElementById('hbe').classList.toggle('on', p==='e');
+  if(p==='e'){ rndrEList(); rndrEField(); }
+}
+function goEditor(){
+  if(authed){ goPage('e'); }
+  else{
+    document.getElementById('auth').classList.add('on');
+    setTimeout(()=>document.getElementById('ain').focus(), 80);
+  }
+}
+function chkPW(){
+  const v=document.getElementById('ain').value;
+  if(v===PW){
+    authed=true;
+    document.getElementById('auth').classList.remove('on');
+    document.getElementById('ain').value='';
+    goPage('e');
+  }else{
+    const e=document.getElementById('aerr');
+    e.style.display='block';
+    document.getElementById('ain').value='';
+    document.getElementById('ain').focus();
+    setTimeout(()=>e.style.display='none', 2200);
+  }
+}
+
+// ── INIT ───────────────────────────────────────────────────
+data = loadD();
+rndrVList();
+document.getElementById('vfield').innerHTML = mkField([], null);
+if(data.length) selR(data[0].id);
+</script>
+</body>
+</html>
